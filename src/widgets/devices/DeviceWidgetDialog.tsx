@@ -155,6 +155,7 @@ export function DeviceWidgetDialog({ options, settings, onSave, onClose }: {
     <DialogPortal onClose={onClose}>
       {ref => (
         <CalmeDialog
+          className="ndc-device-settings"
           dialogRef={ref}
           label={options.title}
           title={options.title}
@@ -192,6 +193,7 @@ export function DeviceWidgetDialog({ options, settings, onSave, onClose }: {
                 options={[
                   { value: 'host', label: t('devices.look.storageByHost') },
                   { value: 'usage', label: t('devices.look.storageByUsage') },
+                  { value: 'manual', label: t('devices.look.storageManual') },
                 ]}
                 onChange={value => change({ storageOrder: value })}
               />

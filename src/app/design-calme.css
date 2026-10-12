@@ -3145,6 +3145,23 @@ body.light {
 .ndc-metric-list--bar { display: flex; flex-direction: column; gap: 11px; }
 .ndc-metric-list--value { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px 16px; }
 .ndc-metric-list--ring { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 14px 10px; justify-items: center; }
+.ndc-m-sortable { position: relative; min-width: 0; max-width: 100%; }
+.ndc-dev-group--ring > .ndc-m-sortable { min-width: 64px; }
+.ndc-m-sortable.is-editable { padding-left: 20px; }
+.ndc-m-sortable.is-dragging { z-index: 10; opacity: 0.65; }
+.ndc-m-drag { position: absolute; left: 0; top: 0; display: flex; align-items: center; justify-content: center; width: 18px; height: 24px; padding: 0; border: none; border-radius: 4px; background: transparent; color: var(--nd-text-dimmed); cursor: grab; touch-action: none; }
+.ndc-m-drag:hover, .ndc-m-drag:focus-visible { color: var(--nd-accent); background: var(--nd-subcard-bg); }
+.ndc-m-drag:active { cursor: grabbing; }
+.ndc-dev-sections, .ndc-dev-charts { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.ndc-dev-sections > .ndc-m-sortable { width: 100%; }
+.ndc-dev-sections.has-top-pair { flex-flow: row wrap; align-items: center; column-gap: 20px; }
+.ndc-dev-sections.has-top-pair > [data-metric-entry="ring"] { flex: 0 1 auto; width: auto; }
+.ndc-dev-sections.has-top-pair > [data-metric-entry="value"] { flex: 1 1 160px; width: auto; }
+.ndc-m-sortable.is-group.is-editable { padding: 28px 0 0; }
+.ndc-group-drag { position: absolute; top: 0; left: 0; display: flex; align-items: center; gap: 5px; min-height: 24px; padding: 0 4px; border: none; border-radius: 4px; background: transparent; color: var(--nd-text-dimmed); font: inherit; font-size: 0.64rem; cursor: grab; touch-action: none; }
+.ndc-group-drag:hover, .ndc-group-drag:focus-visible { color: var(--nd-accent); background: var(--nd-subcard-bg); }
+.ndc-group-drag:active { cursor: grabbing; }
+.ndc-device-settings .ndc-dlg-stack > .ndc-check-row:last-child { border-bottom: 0; }
 .ndc-metric-list .ndc-m--value .ndc-m-label { text-transform: none; letter-spacing: 0; font-size: 0.72rem; color: var(--nd-text-muted); }
 .ndc-metric-list .ndc-m--bar .ndc-m-label { text-transform: none; letter-spacing: 0; font-size: 0.76rem; color: var(--nd-text); }
 
@@ -3397,8 +3414,7 @@ body[data-design="calme"] .nd-service-tooltip {
   transform: translateX(-50%) translateY(4px);
   transition: opacity 0.14s ease 0.12s, transform 0.14s ease 0.12s, visibility 0s linear 0.26s, border-color 0.14s ease;
 }
-body[data-design="calme"] .nd-service:hover .nd-service-tooltip,
-body[data-design="calme"] .nd-service:focus-within .nd-service-tooltip {
+body[data-design="calme"] .nd-service[data-secondary-open="true"] .nd-service-tooltip {
   visibility: visible;
   opacity: 1;
   transform: translateX(-50%) translateY(0);
