@@ -6,6 +6,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-10-12
+
+### Upgrading from 0.2.2
+
+- No new data migration is introduced. Existing accounts, credentials, integrations, configuration and customized pages are preserved. Back up the complete data directory, then pull and recreate the container without deleting data or volumes.
+- Storage defaults to host grouping; choose **By usage** to restore the previous fullest-first order, or **Manual** to arrange volumes with handles. Metric and display-group orders are saved per widget with the page.
+- To roll back, stop NasDash and recreate the previous `0.2.2` image or recorded digest with the same data. That version ignores manual reading/group order and uses its previous Storage presentation. Restore your pre-update backup if you need the exact earlier configuration; upgrades from 0.1.x still follow the [0.2.0 migration guidance](#020---2026-09-30).
+
 ### Fixed
 
 - Close secondary service-link bubbles after opening a destination or leaving the dashboard tab, while preserving hover and keyboard access. Match the pointer's hover border to the bubble and respect the ping-details setting for each secondary address, including legacy Tailscale links; show a loading state until its own result arrives.
@@ -322,7 +330,8 @@ The first release of the new NasDash: every page is a free grid of widgets, the 
 
 Earlier development remains available in Git history; this changelog does not invent releases that were never deliberately published.
 
-[Unreleased]: https://github.com/lucas-lepajollec/nasdash/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/lucas-lepajollec/nasdash/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/lucas-lepajollec/nasdash/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/lucas-lepajollec/nasdash/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/lucas-lepajollec/nasdash/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/lucas-lepajollec/nasdash/compare/v0.1.4...v0.2.0

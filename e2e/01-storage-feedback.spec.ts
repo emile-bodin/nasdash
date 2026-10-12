@@ -49,6 +49,7 @@ test('Storage groups hosts, saves its sort mode and keeps chart colours stable',
     await expect(storage.locator('.ndc-m-label')).toHaveText(usageOrder);
     await expect(storage.locator('.ndc-m--ring')).toHaveCount(3);
     await page.getByRole('toolbar', { name: 'Page editing' }).getByRole('button', { name: 'Save', exact: true }).click();
+    await expect(page.getByRole('toolbar', { name: 'Page editing' })).toBeHidden();
     await page.reload();
     await expect(storage.locator('.ndc-m-label')).toHaveText(usageOrder);
     const saved = await (await page.request.get('/api/pages')).json();

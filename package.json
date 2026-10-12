@@ -1,6 +1,6 @@
 {
   "name": "nasdash",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "private": true,
   "engines": {
     "node": "22.x"
@@ -21,7 +21,7 @@
     "start:lan": "next start -H 0.0.0.0",
     "lint": "node scripts/lint-baseline.mjs",
     "lint:strict": "eslint",
-    "check:version": "node scripts/check-version.mjs",
+    "check:version": "node scripts/check-version.mjs && node --test scripts/release-notes-tests.mjs",
     "check:i18n": "node scripts/check-i18n.mjs && node --test scripts/i18n-confirmation-tests.mjs && node scripts/check-installation-language.mjs",
     "check:installation-language": "node scripts/check-installation-language.mjs",
     "check:audit-policy": "node --test scripts/audit-policy-tests.mjs",

@@ -104,7 +104,11 @@ test('metric dragging stays in its widget and persists through displays and Stor
     await page.mouse.move(end!.x + 5, end!.y + 5, { steps: 10 });
     await page.mouse.up();
     await expect(cpu.locator('.ndc-m-label')).toHaveText([first.name, second.name]);
+    // dnd-kit keeps its document click shield for 50 ms after a pointer drop.
+    // Let that intentional shield expire before clicking an unrelated control.
+    await page.waitForTimeout(60);
     await page.getByRole('toolbar', { name: 'Page editing' }).getByRole('button', { name: 'Save', exact: true }).click();
+    await expect(page.getByRole('toolbar', { name: 'Page editing' })).toBeHidden();
     hottestGpu = true;
     await page.reload();
     await expect(labels).toHaveText(manualOrder);

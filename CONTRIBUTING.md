@@ -76,6 +76,8 @@ By participating, you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 Releases are deliberate milestones, not snapshots of every merge. Prepare a release pull request that updates the declared version, moves completed entries out of `Unreleased` in [CHANGELOG.md](CHANGELOG.md), and documents compatibility, migrations, and rollback when relevant. After all required checks pass, tag the exact accepted `main` commit with an annotated `vMAJOR.MINOR.PATCH` tag and push it through the authoritative Forgejo remote. Verify that the identical tag reaches GitHub and that the versioned container finishes successfully before publishing a draft GitHub release. Never move or reuse a published version tag.
 
+Pushing an approved stable release tag also authorizes its GitHub release publication. After the versioned multi-platform image succeeds, the Docker publication workflow extracts the reviewed dated changelog entry, creates a draft and publishes it. This job alone has `contents: write`; branch builds do not create releases. Existing tags and releases are never replaced. Verify the public release and image after the workflow finishes.
+
 ## Documentation ownership
 
 User and operator procedures live on the [dedicated documentation site](https://docs.nasdash.lucas-homelab.fr/en/docs/). Update English, French, Spanish, German and Italian together when behavior changes. Link to the canonical page instead of duplicating installation, backup/restore, access, demo, CSS or troubleshooting guides here. Publish and verify destination pages before retiring links.

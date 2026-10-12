@@ -44,6 +44,10 @@ The initial suite covers:
 
 Suites that add login attempts use distinct fictional `x-forwarded-for` addresses so they do not consume another suite's one-minute login allowance. The production rate limits stay enabled; isolated API contexts use the project's configured browser base URL.
 
+After saving a page, browser tests wait for the editing toolbar to close before reloading. A button click alone does not wait for the asynchronous page write to finish.
+
+After a pointer drag, allow dnd-kit's documented 50 ms click-suppression cleanup to finish before clicking an unrelated control. This prevents automation from treating the intentional post-drop click shield as a failed save.
+
 For a production-mode run, build first and set `NASDASH_E2E_SERVER_MODE=production` before `npm run test:e2e`. The continuous-integration workflow uses this mode.
 
 When a Playwright run fails in GitHub Actions, the workflow uploads `playwright-report/` and `test-results/` as a diagnostic artifact retained for 14 days. These files contain the HTML report and any trace, screenshot or video retained by Playwright for the failed path.
