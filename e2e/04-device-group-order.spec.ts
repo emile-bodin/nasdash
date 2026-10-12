@@ -67,6 +67,7 @@ test('single-machine display groups move independently without converting readin
     await page.keyboard.press('Space');
     await expect.poll(groupIds).toEqual(['bar', 'ring', 'chart', 'value']);
     await page.getByRole('toolbar', { name: 'Page editing' }).getByRole('button', { name: 'Save', exact: true }).click();
+    await expect(page.getByRole('toolbar', { name: 'Page editing' })).toBeHidden();
     await page.reload();
     await expect.poll(groupIds).toEqual(['bar', 'ring', 'chart', 'value']);
     await expect(widget.locator('.ndc-group-drag')).toHaveCount(0);
