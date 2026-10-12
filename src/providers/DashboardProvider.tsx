@@ -295,6 +295,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     config?.categories?.forEach(cat => cat.services?.forEach(svc => {
       if (svc.localUrl) urls.add(svc.localUrl);
       if (svc.secondaryUrl) urls.add(svc.secondaryUrl);
+      else if (svc.tailscaleUrl) urls.add(svc.tailscaleUrl);
     }));
     return Array.from(urls).join('\n');
   }, [config?.categories]);

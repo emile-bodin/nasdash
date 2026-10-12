@@ -1,9 +1,9 @@
 import type { Reading } from '../devices/readings';
 
-export type StorageOrder = 'host' | 'usage';
+export type StorageOrder = 'host' | 'usage' | 'manual';
 
 /** Existing and new widgets group volumes by host unless fullest-first was selected. */
-export const storageOrder = (value: unknown): StorageOrder => value === 'usage' ? 'usage' : 'host';
+export const storageOrder = (value: unknown): StorageOrder => value === 'usage' || value === 'manual' ? value : 'host';
 
 interface StorageEntry {
   deviceIndex: number;

@@ -14,6 +14,7 @@ describe('Storage volume order', () => {
     expect(storageOrder(undefined)).toBe('host');
     expect(storageOrder('invalid')).toBe('host');
     expect(storageOrder('usage')).toBe('usage');
+    expect(storageOrder('manual')).toBe('manual');
   });
 
   it('groups hosts in machine order, then sorts volume names naturally', () => {

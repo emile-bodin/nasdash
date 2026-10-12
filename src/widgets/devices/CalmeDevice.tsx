@@ -18,6 +18,9 @@ import { MetricView, type Window } from './MetricView';
 import { readingsOf, type Reading } from './readings';
 import { DeviceHeader, KIND_COLOR, RangeSwitch, rangeSetting, stateOf } from './parts';
 import { SettingsButton } from './SettingsButton';
+import { deviceGroupOrder, readingOrderId, moveMetricEntry, orderMetricEntries, type DeviceGroup } from './order';
+import { SortableMetrics } from './SortableMetrics';
+import { displayName } from './DeviceWidgetDialog';
 
 /** The layout follows the width: small below 260 px, medium below 440 px, large above. */
 const SMALL_BELOW_PX = 260;
@@ -33,8 +36,9 @@ export const DEVICE_DEFAULTS: LookDefaults = {
 
 /**
  * One machine: its measures, each in its display (figure, bar, ring or
- * chart), grouped so rings and figures sit side by side, bars below, charts
- * across the width; then the CPU + RAM history. The size of rings and charts
+ * chart), with sortable display groups and sortable readings inside each group.
+ * The default keeps rings and figures together and full-width bars/charts below.
+ * The size of rings and charts
  * follows the width of the widget. Settings (machine, measures, displays,
  * colours, danger thresholds) are in its dialog.
  */
@@ -73,13 +77,16 @@ export default function CalmeDevice({ devices, settings, editMode, isVisible, sh
       <div className={`ndc-dev ndc-dev--${size} ${state === 'offline' ? 'is-offline' : ''}`}>
         <DeviceHeader device={device} snapshot={entry.data} state={state} showSensitive={showSensitive} compact={size !== 'large'} />
         {state === 'offline' && entry.data?.error && <div className="ndc-dev-error">{t(entry.data.error)}</div>}
-        {entry.data && <DeviceBody snapshot={entry.data} look={look} size={size} range={range} onRange={setRange} />}
+        {entry.data && <DeviceBody snapshot={entry.data} look={look} size={size} range={range} onRange={setRange} deviceId={device.id} settings={settings} editMode={editMode} onUpdateSettings={onUpdateSettings} />}
       </div>
     </CalmeWidget>
   );
 }
 
-function DeviceBody({ snapshot, look, size, range, onRange }: { snapshot: DeviceSnapshot; look: WidgetLook; size: 'small' | 'medium' | 'large'; range: HistoryRange; onRange: (range: HistoryRange) => void }) {
+function DeviceBody({ snapshot, look, size, range, onRange, deviceId, settings, editMode, onUpdateSettings }: {
+  snapshot: DeviceSnapshot; look: WidgetLook; size: 'small' | 'medium' | 'large'; range: HistoryRange; onRange: (range: HistoryRange) => void;
+  deviceId: string; settings: WidgetSettings; editMode: boolean; onUpdateSettings: (settings: WidgetSettings) => void;
+}) {
   const { t, language, locale } = useI18n();
   // Devices without an integration: their hand-written stats as bars.
   if (!snapshot.metrics.length && snapshot.stats?.length) {
@@ -98,28 +105,36 @@ function DeviceBody({ snapshot, look, size, range, onRange }: { snapshot: Device
   const end = latestTime(snapshot);
   const window: Window = { start: end - (range === '1h' ? 3_600_000 : 86_400_000), end, withSeconds: range === '1h' };
   const shown = (Object.keys(look.metrics) as MetricId[]).filter(id => id !== 'history' && look.metrics[id].shown && DEVICE_DEFAULTS.offered.includes(id));
-  const byDisplay = (display: Display) => shown.filter(id => look.metrics[id].display === display).flatMap(id => readingsOf(snapshot, id, t, language));
+  const readingId = (reading: Reading) => readingOrderId(deviceId, reading);
+  const byDisplay = (display: Display) => {
+    const readings = shown.filter(id => look.metrics[id].display === display).flatMap(id => readingsOf(snapshot, id, t, language));
+    return display === 'chart' ? readings : orderMetricEntries(readings, settings.metricOrder, readingId);
+  };
   const rings = byDisplay('ring');
   const values = byDisplay('value');
   const bars = byDisplay('bar');
   const charts = byDisplay('chart');
   const showHistory = look.metrics.history.shown && size !== 'small';
   const cell = (reading: Reading, display: Display) => <MetricView key={reading.key} reading={reading} look={look} display={display} window={window} size={size} />;
+  const group = (readings: Reading[], display: Display) => (
+    <SortableMetrics
+      className={`ndc-dev-group ndc-dev-group--${display}`}
+      enabled={editMode}
+      items={readings.map(reading => ({ id: readingId(reading), label: reading.label, content: cell(reading, display) }))}
+      onMove={(active, over) => {
+        const metricOrder = moveMetricEntry(settings.metricOrder, readings.map(readingId), active, over);
+        if (metricOrder) onUpdateSettings({ ...settings, metricOrder });
+      }}
+    />
+  );
 
   const historySeries: ChartSeries[] = showHistory ? (['cpu', 'memory'] as const).flatMap(id => readingsOf(snapshot, id, t, language).map(reading => ({
     id, label: reading.label, color: look.metrics[id].color, points: reading.points, area: id === 'cpu',
   }))) : [];
   const needsRange = charts.length > 0 || historySeries.length > 0;
 
-  return (
-    <>
-      {(rings.length > 0 || values.length > 0) && (
-        <div className={`ndc-dev-top ${rings.length && values.length ? 'has-both' : ''}`}>
-          {rings.length > 0 && <div className="ndc-dev-group ndc-dev-group--ring">{rings.map(reading => cell(reading, 'ring'))}</div>}
-          {values.length > 0 && <div className="ndc-dev-group ndc-dev-group--value">{values.map(reading => cell(reading, 'value'))}</div>}
-        </div>
-      )}
-      {bars.length > 0 && <div className="ndc-dev-group ndc-dev-group--bar">{bars.map(reading => cell(reading, 'bar'))}</div>}
+  const chartGroup = (
+    <div className="ndc-dev-charts">
       {needsRange && (
         <div className="ndc-dev-range">
           {historySeries.length > 0 && historySeries.map(item => <span key={item.id} className="ndc-legend-item"><span className="ndc-legend-mark" style={{ background: item.color }} />{item.label}</span>)}
@@ -141,6 +156,29 @@ function DeviceBody({ snapshot, look, size, range, onRange }: { snapshot: Device
         />
       )}
       {charts.length > 0 && <div className="ndc-dev-group ndc-dev-group--chart">{charts.map(reading => cell(reading, 'chart'))}</div>}
-    </>
+    </div>
+  );
+  const available: Record<DeviceGroup, React.ReactNode> = {
+    ring: rings.length ? group(rings, 'ring') : null,
+    value: values.length ? group(values, 'value') : null,
+    bar: bars.length ? group(bars, 'bar') : null,
+    chart: needsRange ? chartGroup : null,
+  };
+  const order = deviceGroupOrder(settings.deviceGroupOrder);
+  const items = order.filter(id => available[id]).map(id => ({
+    id, label: displayName(id, t), content: <div data-device-section={id}>{available[id]}</div>,
+  }));
+  const customGroups = Array.isArray(settings.deviceGroupOrder) && settings.deviceGroupOrder.some(id => order.includes(id as DeviceGroup));
+  return (
+    <SortableMetrics
+      kind="group"
+      className={`ndc-dev-sections ${!customGroups && rings.length && values.length ? 'has-top-pair' : ''}`}
+      enabled={editMode}
+      items={items}
+      onMove={(active, over) => {
+        const deviceGroupOrder = moveMetricEntry(order, items.map(item => item.id), active, over);
+        if (deviceGroupOrder) onUpdateSettings({ ...settings, deviceGroupOrder });
+      }}
+    />
   );
 }

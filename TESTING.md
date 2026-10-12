@@ -42,6 +42,8 @@ The initial suite covers:
 - admin logout after the initial dashboard requests settle, single-owner EventSource cleanup, session removal and full reload to the login page;
 - anonymous rejection and browser redirection in private mode, including protection of the logo listing and stored logo files.
 
+Suites that add login attempts use distinct fictional `x-forwarded-for` addresses so they do not consume another suite's one-minute login allowance. The production rate limits stay enabled; isolated API contexts use the project's configured browser base URL.
+
 For a production-mode run, build first and set `NASDASH_E2E_SERVER_MODE=production` before `npm run test:e2e`. The continuous-integration workflow uses this mode.
 
 When a Playwright run fails in GitHub Actions, the workflow uploads `playwright-report/` and `test-results/` as a diagnostic artifact retained for 14 days. These files contain the HTML report and any trace, screenshot or video retained by Playwright for the failed path.

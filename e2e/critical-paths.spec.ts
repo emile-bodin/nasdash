@@ -5,7 +5,7 @@ const VIEWER_PASSWORD = 'playwright-viewer-password';
 
 async function isolatedRequest(ipSuffix: number): Promise<APIRequestContext> {
   return playwrightRequest.newContext({
-    baseURL: 'http://127.0.0.1:2510',
+    baseURL: test.info().project.use.baseURL,
     extraHTTPHeaders: { 'x-forwarded-for': `10.250.0.${ipSuffix}` },
   });
 }

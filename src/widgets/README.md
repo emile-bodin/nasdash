@@ -37,8 +37,18 @@ shared store (`devices/deviceData.ts`); they draw with the chart kit in
 `src/components/charts/`. Most views still delegate to the historical components in
 `src/components/widgets/`; they move into their folder when redesigned.
 
-Storage uses `storage/order.ts`: `settings.storageOrder` is `host` (default,
-including widgets without this setting) or `usage` (global fullest first).
-Host grouping follows configuration device order, then natural volume-name
-order with a stable metric-key tie-breaker. Chart colours follow the device,
-not the sorted volume position. Other metric widgets retain their own order.
+Storage uses `storage/order.ts`: `settings.storageOrder` is `host` (default),
+`usage` (global fullest first) or `manual`. Automatic modes disable card dragging.
+`devices/order.ts` stores widget-local `settings.metricOrder` as serialized
+`[deviceId, readingKey]` pairs (one-card measures use their semantic metric id,
+disks and GPUs use their individual source keys). Unknown readings follow saved ones; absent
+readings retain their slots. Figure/bar/ring cards use `SortableMetrics` in page
+edit mode with mouse, touch and keyboard handles. The single-machine widget
+sorts within each display group. Charts retain automatic order and host colours.
+Widget settings follow page save/cancel/undo; shared machine order is unchanged.
+
+Single-machine `settings.deviceGroupOrder` stores display-group ids (`ring`,
+`value`, `bar`, `chart`). Named group handles move whole blocks while the nested
+metric handles keep their original display. Charts include history/range controls
+and move only as a block. Default layout is preserved until the first group move;
+empty groups retain their saved slots. Group order follows page save/cancel/undo.

@@ -11,7 +11,7 @@ import { CalmeInfo } from '@/components/modals/settings/shared/CalmeControls';
  * footer with the destructive action apart on the left. The caller keeps the
  * overlay, the portal and the dialog accessibility hook.
  */
-export function CalmeDialog({ dialogRef, label, title, subtitle, onClose, children, footer, danger, width = 460 }: {
+export function CalmeDialog({ dialogRef, label, title, subtitle, onClose, children, footer, danger, width = 460, className = '' }: {
   dialogRef: React.Ref<HTMLDivElement>;
   label: string;
   title: React.ReactNode;
@@ -23,6 +23,7 @@ export function CalmeDialog({ dialogRef, label, title, subtitle, onClose, childr
   /** Destructive action, on the left. */
   danger?: React.ReactNode;
   width?: number;
+  className?: string;
 }) {
   const { t } = useI18n();
   return (
@@ -32,7 +33,7 @@ export function CalmeDialog({ dialogRef, label, title, subtitle, onClose, childr
       aria-modal="true"
       aria-label={label}
       tabIndex={-1}
-      className="nd-modal ndc-dialog nd-animate-in"
+      className={`nd-modal ndc-dialog nd-animate-in ${className}`}
       style={{ maxWidth: width }}
       onClick={event => event.stopPropagation()}
     >

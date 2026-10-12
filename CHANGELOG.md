@@ -8,6 +8,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Fixed
 
+- Close secondary service-link bubbles after opening a destination or leaving the dashboard tab, while preserving hover and keyboard access. Match the pointer's hover border to the bubble and respect the ping-details setting for each secondary address, including legacy Tailscale links; show a loading state until its own result arrives.
+
 - Recognize Glances' unnamed `k10temp` CPU temperature sensors on Synology DSM. Ignore non-temperature sensors and invalid readings while preserving existing CPU sensor priorities.
 
 - Keep demo calendar trials in the current browser tab, so adding, editing and deleting fictional events work across stateless hosting instances. Reloading or resetting restores demo events; installed calendars retain server persistence. Exercise all five demo locales in required production browser CI without a calendar API.
@@ -16,6 +18,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - Translate wallpaper and appearance-profile delete confirmations in all five languages; extend the interface-copy gate to confirmation labels with regression fixtures.
 
 ### Changed
+
+- Reorder the Ring, Figure, Bar and Chart groups in the single-machine widget with named handles, without changing metric display formats. Keep the initial layout until a group is moved; save group order with the page, retaining positions for hidden groups. Charts move together with their history and range controls.
+
+- Reorder readings within CPU, RAM, GPU, temperature, load, network and single-machine widgets in page edit mode, using mouse, touch or keyboard handles in figure/bar/ring displays. Storage adds **Manual** volume order; host/usage modes and charts disable dragging. Orders are saved per widget with the page, preserve temporarily missing readings and do not reorder the shared machines.
+- Remove the doubled separator between shown-value options and danger alerts in machine-widget settings.
 
 - Group Storage volumes by host and naturally sorted volume name by default, including existing widgets. Choose **By usage** in widget settings to restore the global fullest-first order. Keep each host's chart colour stable when volume usage or the sort mode changes; no data migration is required.
 

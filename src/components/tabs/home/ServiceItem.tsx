@@ -34,15 +34,40 @@ export default function ServiceItem({ service, categoryId, dndScope, editMode, s
   const { t } = useI18n();
   const [imgError, setImgError] = useState(false);
   const [secondaryIconFailed, setSecondaryIconFailed] = useState(false);
+  const [secondaryOpen, setSecondaryOpen] = useState(false);
   // The second way in (another address or a Tailscale link), offered on hover.
   const secondaryUrl = service.secondaryUrl || service.tailscaleUrl;
   const secondaryIcon = service.secondaryLogo || (service.tailscaleUrl && !service.secondaryUrl ? '/api/logos/logo-tailscale.png' : service.logo);
   const { config, pingResults } = useConfig();
   const demoMode = config?.demoMode === true;
+  const canOpenSecondary = Boolean(secondaryUrl) && !editMode && !demoMode;
 
   const pingIndicatorMode = config?.settings?.pingIndicatorMode || 'all';
   const showUrl = layout !== 'compact' && layout !== 'grid' && layout !== 'bento' && !layout?.startsWith('bento-logo');
   const showPingText = showUrl && config?.settings?.showPingDetails;
+  const secondaryStatus = secondaryUrl ? pingResults[secondaryUrl] : undefined;
+
+  // A mouse click can keep focus on the link after returning from another tab.
+  // Close the bubble on departure; only a fresh hover or keyboard focus opens it.
+  useEffect(() => {
+    if (!secondaryOpen) return;
+    const close = () => setSecondaryOpen(false);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') close();
+    };
+    window.addEventListener('blur', close);
+    window.addEventListener('pagehide', close);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      window.removeEventListener('blur', close);
+      window.removeEventListener('pagehide', close);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [secondaryOpen]);
+
+  const pingText = (status: typeof secondaryStatus) => status
+    ? `${status.status === 'online' ? (status.selfSigned ? t('ping.selfSigned') : 'OK') : t(status.statusText)} - ${status.latency}ms`
+    : t('Chargement…');
 
   const [delayedStatus, setDelayedStatus] = useState<{ status: string; statusText: string; latency: number; selfSigned?: boolean } | null>(null);
 
@@ -152,7 +177,14 @@ export default function ServiceItem({ service, categoryId, dndScope, editMode, s
 
 
   return (
-    <div ref={setNodeRef} data-service-id={service.id} className={`nd-service nd-service--${activeLayout}`} style={{
+    <div ref={setNodeRef} data-service-id={service.id} data-secondary-open={secondaryOpen} className={`nd-service nd-service--${activeLayout}`}
+      onPointerEnter={event => { if (canOpenSecondary && event.pointerType !== 'touch') setSecondaryOpen(true); }}
+      onPointerMove={event => { if (canOpenSecondary && event.pointerType !== 'touch') setSecondaryOpen(true); }}
+      onPointerLeave={event => { if (!event.currentTarget.querySelector(':focus-visible')) setSecondaryOpen(false); }}
+      onFocusCapture={event => { if (canOpenSecondary && event.target.matches(':focus-visible')) setSecondaryOpen(true); }}
+      onBlurCapture={event => { if (!event.currentTarget.contains(event.relatedTarget)) setSecondaryOpen(false); }}
+      onKeyDown={event => { if (event.key === 'Escape') setSecondaryOpen(false); }}
+      style={{
       position: 'relative', 
       opacity: isDragging ? 0.3 : 1,
       outline: isOver ? '2px solid var(--nd-accent)' : undefined,
@@ -164,6 +196,7 @@ export default function ServiceItem({ service, categoryId, dndScope, editMode, s
         className="nd-service-link"
         style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: activeLayout === 'compact' ? 8 : 10 }}
         onClick={(e) => {
+          setSecondaryOpen(false);
           if (editMode || demoMode) {
             e.preventDefault();
           }
@@ -178,9 +211,9 @@ export default function ServiceItem({ service, categoryId, dndScope, editMode, s
           showUrl && service.localUrl ? (
             <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, gap: 1 }}>
               <span className="nd-service-name">{service.name}</span>
-              {showPingText && delayedStatus ? (
+              {showPingText ? (
                 <span className="nd-service-url">
-                  {delayedStatus.status === 'online' ? (delayedStatus.selfSigned ? t('ping.selfSigned') : 'OK') : t(delayedStatus.statusText)} - {delayedStatus.latency}ms
+                  {pingText(delayedStatus ?? undefined)}
                 </span>
               ) : (
                 <span className="nd-service-url">
@@ -198,7 +231,7 @@ export default function ServiceItem({ service, categoryId, dndScope, editMode, s
 
       {secondaryUrl && !editMode && !demoMode && (
         <div className="nd-service-tooltip-wrapper">
-          <a href={secondaryUrl} target="_blank" rel="noopener noreferrer" className="nd-service-tooltip">
+          <a href={secondaryUrl} target="_blank" rel="noopener noreferrer" className="nd-service-tooltip" onClick={() => setSecondaryOpen(false)}>
             <span className="nd-service-tooltip-icon">
               {secondaryIcon && !secondaryIconFailed
                 ? <img src={secondaryIcon} alt="" onError={() => setSecondaryIconFailed(true)} />
@@ -206,7 +239,7 @@ export default function ServiceItem({ service, categoryId, dndScope, editMode, s
             </span>
             <span className="nd-service-tooltip-text">
               <span className="nd-service-tooltip-label">{t('services.secondary.open')}</span>
-              <span className="nd-service-tooltip-host">{showSensitive ? hostOf(secondaryUrl) : '•••'}</span>
+              <span className="nd-service-tooltip-host">{config?.settings?.showPingDetails ? pingText(secondaryStatus) : (showSensitive ? hostOf(secondaryUrl) : '•••')}</span>
             </span>
             <ArrowUpRight size={12} className="nd-service-tooltip-arrow" aria-hidden="true" />
           </a>

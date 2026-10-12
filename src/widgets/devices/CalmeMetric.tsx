@@ -19,6 +19,8 @@ import { metricName } from './DeviceWidgetDialog';
 import { RangeSwitch, rangeSetting, SERIES_COLORS } from './parts';
 import { SettingsButton } from './SettingsButton';
 import { orderStorageEntries, storageOrder } from '../storage/order';
+import { readingOrderId, moveMetricEntry, orderMetricEntries } from './order';
+import { SortableMetrics } from './SortableMetrics';
 
 /** Measures that have their own widget, and how each starts. */
 export const METRIC_WIDGET_DISPLAY: Partial<Record<MetricId, Display>> = {
@@ -62,7 +64,12 @@ export default function CalmeMetric({ metric, devices, settings, editMode, isVis
   const size = width < 300 ? 'small' : width < 520 ? 'medium' : 'large';
 
   const readings = shown.flatMap((device, deviceIndex) => readingsOf(data[device.id]?.data, metric, t, language).map(reading => ({ device, deviceIndex, reading })));
-  const entries = metric === 'disk' ? orderStorageEntries(readings, storageOrder(settings.storageOrder), locale) : readings;
+  const volumeOrder = storageOrder(settings.storageOrder);
+  const baseEntries = metric === 'disk' ? orderStorageEntries(readings, volumeOrder, locale) : readings;
+  const entryId = (entry: typeof readings[number]) => readingOrderId(entry.device.id, entry.reading);
+  const manual = metric !== 'disk' || volumeOrder === 'manual';
+  // Charts retain their automatic series order; saved reading order is for cards.
+  const entries = manual && display !== 'chart' ? orderMetricEntries(baseEntries, settings.metricOrder, entryId) : baseEntries;
   const labelled = (entry: typeof entries[number]): Reading => withFacets({
     ...entry.reading,
     label: metric === 'disk' || (metric === 'gpu' && entry.reading.label !== 'GPU') ? [entry.reading.label, entry.device.name].join(' · ') : entry.device.name,
@@ -127,19 +134,25 @@ export default function CalmeMetric({ metric, devices, settings, editMode, isVis
           />
         </div>
       ) : (
-        <div className={`ndc-metric-list ndc-metric-list--${display}`}>
-          {entries.map((entry, index) => (
-            <MetricView
-              key={[entry.device.id, entry.reading.key].join('|')}
+        <SortableMetrics
+          className={`ndc-metric-list ndc-metric-list--${display}`}
+          enabled={editMode && manual}
+          onMove={(active, over) => {
+            const metricOrder = moveMetricEntry(settings.metricOrder, entries.map(entryId), active, over);
+            if (metricOrder) onUpdateSettings({ ...settings, metricOrder });
+          }}
+          items={entries.map((entry, index) => ({
+            id: entryId(entry), label: labelled(entry).label,
+            content: <MetricView
               reading={labelled(entry)}
               look={look}
               display={display}
               window={{ start: end - span, end, withSeconds: true }}
               size={size}
               color={colorFor(entry, index)}
-            />
-          ))}
-        </div>
+            />,
+          }))}
+        />
       )}
     </CalmeWidget>
   );

@@ -899,14 +899,22 @@ body {
   width: 8px;
   height: 8px;
   background: var(--nd-card-bg);
-  border-right: 1px solid var(--nd-card-border);
-  border-bottom: 1px solid var(--nd-card-border);
+  border-right: 1px solid;
+  border-bottom: 1px solid;
+  border-color: inherit;
+  transition: border-color 0.14s ease;
   z-index: 2;
 }
 
-.nd-service:hover .nd-service-tooltip {
+.nd-service[data-secondary-open="true"] .nd-service-tooltip {
   display: flex;
   transform: translateX(-50%) translateY(0);
+}
+
+.nd-service[data-secondary-open="true"] { z-index: 20; }
+.nd-service-tooltip:hover,
+.nd-service-tooltip:focus-visible {
+  border-color: color-mix(in srgb, var(--nd-accent) 55%, var(--nd-card-border));
 }
 
 .nd-service-tooltip-icon {
