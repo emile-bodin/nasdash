@@ -1,6 +1,9 @@
 import { expect, test, type Locator } from '@playwright/test';
 import type { Page } from '@/lib/pages/types';
 
+// Keep this suite's login attempts out of other suites' rate-limit buckets.
+test.use({ extraHTTPHeaders: { 'x-forwarded-for': '198.18.0.3' } });
+
 test('metric dragging stays in its widget and persists through displays and Storage sort modes', async ({ page }) => {
   test.skip(process.env.NASDASH_DEMO_MODE === 'true', 'Uses installed-instance fixtures.');
   expect((await page.request.post('/api/auth/login', { data: { username: 'admin', password: 'playwright-admin-password' } })).status()).toBe(200);

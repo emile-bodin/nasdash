@@ -1,6 +1,9 @@
 import { expect, test } from '@playwright/test';
 import type { Page } from '@/lib/pages/types';
 
+// Keep this suite's login attempts out of other suites' rate-limit buckets.
+test.use({ extraHTTPHeaders: { 'x-forwarded-for': '198.18.0.2' } });
+
 test('secondary links close after navigation, support keyboard focus and show their own ping', async ({ page, context }) => {
   test.skip(process.env.NASDASH_DEMO_MODE === 'true', 'Uses installed-instance fixtures.');
   const primaryUrl = 'https://primary.example.invalid/';
