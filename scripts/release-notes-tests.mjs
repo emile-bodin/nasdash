@@ -8,6 +8,11 @@ test('release notes include only the dated candidate and its versioned image', (
   assert.equal(releaseNotes(changelog, '0.2.3', 'v0.2.3'), '### Fixed\n\n- Current fixes.\n\nContainer: `ghcr.io/lucas-lepajollec/nasdash:0.2.3`\n');
 });
 
+test('changelog anchors still resolve from the standalone GitHub release page', () => {
+  const notes = releaseNotes(changelog.replace('Current fixes.', '[Migration](#020---2026-09-30).'), '0.2.3', 'v0.2.3');
+  assert.match(notes, /\[Migration\]\(https:\/\/github\.com\/lucas-lepajollec\/nasdash\/blob\/v0\.2\.3\/CHANGELOG\.md#020---2026-09-30\)/);
+});
+
 test('release notes reject wrong tags, prereleases, missing, undated or duplicate entries', () => {
   assert.throws(() => releaseNotes(changelog, '0.2.3', 'v0.2.2'));
   assert.throws(() => releaseNotes(changelog, '0.2.3-rc.1', 'v0.2.3-rc.1'));

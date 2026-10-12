@@ -13,7 +13,8 @@ export function releaseNotes(changelog, version, tag) {
   }
   const start = matches[0].index + matches[0][0].length;
   const end = sections.find(section => section.index > matches[0].index)?.index ?? changelog.length;
-  const body = changelog.slice(start, end).split(/^\[Unreleased\]:/m)[0].trim();
+  const body = changelog.slice(start, end).split(/^\[Unreleased\]:/m)[0].trim()
+    .replace(/\]\(#([^)]*)\)/g, `](https://github.com/lucas-lepajollec/nasdash/blob/${tag}/CHANGELOG.md#$1)`);
   if (!body) throw new Error('Release notes must not be empty.');
   return `${body}\n\nContainer: \`ghcr.io/lucas-lepajollec/nasdash:${version}\`\n`;
 }
