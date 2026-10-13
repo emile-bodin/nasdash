@@ -6,7 +6,44 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-10-13
+
+### Upgrading from 0.2.3
+
+- Back up the complete data directory, then pull and recreate NasDash without deleting data or volumes. Accounts, credentials, integrations and saved pages are preserved; no automatic data migration is introduced.
+- The supplied Compose examples now make the Docker proxy optional. Existing proxy installations must retain their current Compose service or use `--profile docker-proxy` when recreating the supplied stack. Portainer, Dockhand and Docker-compatible API/socket connections work without this proxy; keep the existing data mount.
+- Forwarded client addresses are trusted for rate limits only when `NASDASH_TRUST_PROXY=true` is explicitly set behind a trusted proxy. Direct installations need no override.
+- Existing temperature selections now refer to CPU temperature; GPU temperature has its own choices and alerts when available. Demo edits survive reloads: use Reset to restore the fictional workspace.
+- To roll back, recreate the recorded `0.2.3` image with the same data mount; restore the pre-upgrade backup if the exact earlier state is required. Rollback also restores the earlier behavior and omits this release's security and reliability fixes.
+
+### Maintenance
+
 - Refresh compatible React, service telemetry, UUID and browser-test dependencies; retain the Node 22 baseline.
+
+### Fixed
+
+- Require explicit trusted-proxy configuration for forwarded rate-limit identities and limit failed login attempts per account independently.
+- Tighten explicit reader allowlists and private configuration recovery; keep private assets and calendar connection details protected while preserving existing access-list compatibility.
+- Preserve related configuration files on reported save failures, validate local calendar dates and upload filenames, and record the application version in standalone backups.
+- Refresh monitoring connection contexts after endpoint or credential changes, recover Glances API-version changes, preserve independent storage volumes, reject invalid responses, and prevent older collections from overwriting newer readings.
+- Keep failed machine collections visibly unavailable with stale readings, and show calendar feed and initial configuration failures instead of indefinite loading or a silent empty view.
+- Parse iCalendar time zones, recurrence rules and exceptions with bounded expansion, including folded and escaped text.
+- Translate Docker diagnostics and operation errors across all five languages; distinguish denied socket access, invalid responses and unavailable sources. Preserve forms after failed saves or deletions and show inspect/action errors.
+- Resolve Docker actions to an exact container, restrict fictional engine/device data to demo mode, and compare normalized image identities before offering removal.
+- Normalize Docker resource responses across HTTP APIs, Unix sockets, Portainer and Dockhand; retain visible image tags, digests and identifiers, including untagged images, and refresh image/volume confirmations and presentation.
+- Keep integration form fields labelled for assistive technology, support media address copying on trusted HTTP LANs, and prevent secondary-link tooltip overflow on narrow screens.
+
+### Changed
+
+- Keep Device and Metrics bar/chart names on the left and all statistics on the right, on one line when they fit. Wrap within the available width while preserving readable captions and full values.
+
+- Unify dashboard dropdowns with the existing NasDash selector, improve popup positioning and keyboard focus (including Tab immediately after opening), and label every selector. Place Docker page selection in the responsive table header and usage counts beside Refresh, replace the repeated footer explanation with the existing information bubble beside the image/volume title and remove its decorative icon, use red for unused resources, and default to five rows on mobile while retaining explicit page-size choices. Remove duplicate CPU/GPU metric captions; keep the GPU-model option where it adds information.
+
+- Rework Docker image/volume lists with search, usage filters, sorting, 5/10/25/50-item pagination, expandable metadata and page-scoped selection. Keep deletion confirmations readable, preserve only failed targets for retry, and adapt to narrow widgets and mobile widths using the existing appearance tokens. Include fictional unused resources in the isolated demo.
+
+- Keep fictional demo edits in a temporary browser-tab workspace across reloads and server-worker changes, with serialized requests and an explicit Reset restoring fixtures. Browser session storage is required for reload retention; direct cookie-only demo API clients keep temporary process-local state.
+- Separate CPU and GPU temperature choices in device and metric widgets when the source supplies GPU temperature. Keep existing temperature selections as CPU temperature, with independent display options and thresholds; preserve readable labels in narrow layouts.
+- Make the local Docker socket proxy an optional Compose profile. Portainer, Dockhand and Docker-compatible API/socket connections remain alternatives; document their configuration, permissions and resource operations in all five guide languages. Existing proxy users must keep their Compose configuration or enable the profile when recreating the stack, without changing the data mount.
 
 ## [0.2.3] - 2026-10-12
 
@@ -332,7 +369,8 @@ The first release of the new NasDash: every page is a free grid of widgets, the 
 
 Earlier development remains available in Git history; this changelog does not invent releases that were never deliberately published.
 
-[Unreleased]: https://github.com/lucas-lepajollec/nasdash/compare/v0.2.3...HEAD
+[Unreleased]: https://github.com/lucas-lepajollec/nasdash/compare/v0.2.4...HEAD
+[0.2.4]: https://github.com/lucas-lepajollec/nasdash/compare/v0.2.3...v0.2.4
 [0.2.3]: https://github.com/lucas-lepajollec/nasdash/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/lucas-lepajollec/nasdash/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/lucas-lepajollec/nasdash/compare/v0.2.0...v0.2.1

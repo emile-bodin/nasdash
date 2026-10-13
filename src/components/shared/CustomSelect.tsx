@@ -19,9 +19,11 @@ interface CustomSelectProps {
   style?: React.CSSProperties;
   disabled?: boolean;
   ariaLabel?: string;
+  ariaLabelledBy?: string;
+  id?: string;
 }
 
-export default function CustomSelect({ value, options, onChange, className, style, disabled, ariaLabel }: CustomSelectProps) {
+export default function CustomSelect({ value, options, onChange, className, style, disabled, ariaLabel, ariaLabelledBy, id: controlId }: CustomSelectProps) {
   const { t } = useI18n();
   const [isOpen, setIsOpen] = useState(false);
   const [place, setPlace] = useState<{ left: number; width: number; top?: number; bottom?: number; maxHeight: number } | null>(null);
@@ -29,8 +31,21 @@ export default function CustomSelect({ value, options, onChange, className, styl
   const listRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const optionRefs = useRef<Array<HTMLDivElement | null>>([]);
+  const focusFrame = useRef<number | null>(null);
   const id = useId();
   const listboxId = `custom-select-${id}`;
+
+  useEffect(() => () => {
+    if (focusFrame.current !== null) window.cancelAnimationFrame(focusFrame.current);
+  }, []);
+
+  const focusNextFrame = (target: () => HTMLElement | null | undefined) => {
+    if (focusFrame.current !== null) window.cancelAnimationFrame(focusFrame.current);
+    focusFrame.current = window.requestAnimationFrame(() => {
+      focusFrame.current = null;
+      target()?.focus();
+    });
+  };
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent | TouchEvent) => {
@@ -71,10 +86,11 @@ export default function CustomSelect({ value, options, onChange, className, styl
     const above = box.top - margin;
     const wanted = Math.min(280, 12 + options.length * 36);
     const up = below < wanted && above > below;
-    const maxHeight = Math.max(120, Math.min(280, (up ? above : below) - 4));
+    const maxHeight = Math.max(36, Math.min(280, (up ? above : below) - 4));
+    const width = Math.min(Math.max(120, box.width), Math.max(0, window.innerWidth - margin * 2));
     setPlace({
-      left: box.left,
-      width: box.width,
+      left: Math.max(margin, Math.min(box.left, window.innerWidth - width - margin)),
+      width,
       maxHeight,
       ...(up ? { bottom: window.innerHeight - box.top + 4 } : { top: box.bottom + 4 }),
     });
@@ -96,19 +112,21 @@ export default function CustomSelect({ value, options, onChange, className, styl
   const selectedIndex = Math.max(0, selectableOptions.findIndex(option => option.value === selectedOption?.value));
 
   const closeMenu = (restoreTriggerFocus = false) => {
+    if (focusFrame.current !== null) window.cancelAnimationFrame(focusFrame.current);
+    focusFrame.current = null;
     setIsOpen(false);
     if (restoreTriggerFocus) {
-      window.requestAnimationFrame(() => triggerRef.current?.focus());
+      focusNextFrame(() => triggerRef.current);
     }
   };
 
-  const openMenu = (focusSelectedOption = false) => {
-    if (disabled) return;
+  const openMenu = (focusSelectedOption = true) => {
+    if (disabled || !selectableOptions.length) return;
     measure();
     setIsOpen(true);
     window.dispatchEvent(new CustomEvent('customSelectOpen', { detail: id }));
     if (focusSelectedOption) {
-      window.requestAnimationFrame(() => optionRefs.current[selectedIndex]?.focus());
+      focusNextFrame(() => optionRefs.current[selectedIndex]);
     }
   };
 
@@ -117,7 +135,25 @@ export default function CustomSelect({ value, options, onChange, className, styl
     closeMenu(true);
   };
 
+  const movePastTrigger = (event: React.KeyboardEvent<HTMLElement>) => {
+    event.preventDefault();
+    const trigger = triggerRef.current;
+    const dialog = trigger?.closest('[role="dialog"]');
+    const scope = dialog ?? document;
+    const focusable = Array.from(scope.querySelectorAll<HTMLElement>('a[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'))
+      .filter(element => !listRef.current?.contains(element) && element.getClientRects().length > 0 && getComputedStyle(element).visibility !== 'hidden');
+    const triggerIndex = trigger ? focusable.indexOf(trigger) : -1;
+    const nextIndex = triggerIndex + (event.shiftKey ? -1 : 1);
+    const next = focusable[nextIndex] ?? (dialog ? focusable[event.shiftKey ? focusable.length - 1 : 0] : trigger);
+    closeMenu();
+    focusNextFrame(() => next);
+  };
+
   const handleOptionKeyDown = (event: React.KeyboardEvent<HTMLDivElement>, option: Option, index: number) => {
+    if (event.key === 'Tab') {
+      movePastTrigger(event);
+      return;
+    }
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       selectOption(option);
@@ -125,6 +161,7 @@ export default function CustomSelect({ value, options, onChange, className, styl
     }
     if (event.key === 'Escape') {
       event.preventDefault();
+      event.stopPropagation();
       closeMenu(true);
       return;
     }
@@ -140,12 +177,15 @@ export default function CustomSelect({ value, options, onChange, className, styl
   };
 
   return (
-    <div ref={containerRef} style={{ position: 'relative', width: '100%', opacity: disabled ? 0.6 : 1, ...style }} className={className}>
+    <div ref={containerRef} style={{ position: 'relative', width: '100%', opacity: disabled ? 0.6 : 1, ...style }} className={`nd-custom-select ${className ?? ''}`}>
       <button
+        id={controlId}
         ref={triggerRef}
         type="button"
         className="nd-input" 
         aria-label={ariaLabel}
+        aria-labelledby={ariaLabelledBy}
+        data-dialog-escape-boundary={isOpen ? 'true' : undefined}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         aria-controls={listboxId}
@@ -158,6 +198,11 @@ export default function CustomSelect({ value, options, onChange, className, styl
           }
         }}
         onKeyDown={(event) => {
+          // Tab can arrive before the opening frame has focused the portalled option.
+          if (event.key === 'Tab' && isOpen) {
+            movePastTrigger(event);
+            return;
+          }
           if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
             event.preventDefault();
             if (isOpen) {
@@ -168,6 +213,7 @@ export default function CustomSelect({ value, options, onChange, className, styl
           }
           if (event.key === 'Escape' && isOpen) {
             event.preventDefault();
+            event.stopPropagation();
             closeMenu();
           }
         }}
@@ -182,16 +228,18 @@ export default function CustomSelect({ value, options, onChange, className, styl
           textAlign: 'left'
         }}
       >
-        <span>{selectedOption?.label}</span>
-        {!disabled && <ChevronDown size={14} style={{ opacity: 0.5, transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />}
+        <span className="nd-custom-select-value">{selectedOption?.label}</span>
+        {!disabled && <ChevronDown size={14} style={{ flexShrink: 0, opacity: 0.5, transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />}
       </button>
 
-      {isOpen && place && typeof document !== 'undefined' && createPortal(
+      {isOpen && !disabled && place && typeof document !== 'undefined' && createPortal(
         <div
           ref={listRef}
           id={listboxId}
           role="listbox"
           aria-label={ariaLabel || t("Options")}
+          aria-labelledby={ariaLabelledBy}
+          className="nd-custom-select-menu"
           data-dialog-escape-boundary="true"
           style={{
           position: 'fixed',
@@ -244,6 +292,7 @@ export default function CustomSelect({ value, options, onChange, className, styl
                 key={opt.value}
                 ref={(element) => { optionRefs.current[optionIndex] = element; }}
                 role="option"
+                className={`nd-custom-select-option${isSelected ? ' is-selected' : ''}`}
                 aria-selected={isSelected}
                 tabIndex={optionIndex === selectedIndex ? 0 : -1}
                 onClick={() => selectOption(opt)}
@@ -255,25 +304,14 @@ export default function CustomSelect({ value, options, onChange, className, styl
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  background: isSelected ? 'var(--nd-accent-glow)' : 'transparent',
                   fontSize: '0.78rem',
                   fontWeight: isSelected ? 600 : 400,
                   color: isSelected ? 'var(--nd-accent)' : 'var(--nd-text)',
                   transition: 'all 0.15s ease'
                 }}
-                onMouseEnter={(e) => {
-                  if (!isSelected) {
-                    e.currentTarget.style.background = 'var(--nd-subcard-bg)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isSelected) {
-                    e.currentTarget.style.background = 'transparent';
-                  }
-                }}
               >
                 <span>{opt.label}</span>
-                {isSelected && <Check size={14} color="var(--nd-accent)" />}
+                {isSelected && <Check size={14} color="var(--nd-accent)" style={{ flexShrink: 0 }} />}
               </div>
             );
           })}

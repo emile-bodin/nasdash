@@ -16,7 +16,7 @@ export interface Reading {
   value?: number;
   /** Text of the value (`23 %`, `46 °C`, `↓ 2,4 Mo/s`). */
   text: string;
-  /** Second line (capacity, free space, core count, send rate). */
+  /** Supporting text (capacity, free space, core count, send rate). */
   detail?: string;
   points: [number, number][];
   /** Network: the send side, drawn as a second line. */
@@ -29,7 +29,8 @@ export interface Reading {
 
 export function metricText(metric: MetricId, value: number | undefined, language: UiLanguage): string {
   switch (metric) {
-    case 'temperature': return temperatureText(value);
+    case 'temperature':
+    case 'gpuTemperature': return temperatureText(value);
     case 'load': return value === undefined ? '–' : decimal(value, 2, language);
     case 'network': return rateText(value, language);
     default: return percentText(value, language);
@@ -54,14 +55,17 @@ export function readingsOf(snapshot: DeviceSnapshot | undefined, metric: MetricI
     case 'gpu':
       return metrics.filter(item => item.kind === 'gpu').map((gpu, index, all) => ({
         metric, key: gpu.key, label: all.length > 1 ? gpu.name || 'GPU' : 'GPU', value: gpu.percent, text: percentText(gpu.percent, language),
-        detail: all.length > 1 ? undefined : gpu.name, points: seriesPoints(snapshot, gpu.key), source: gpu,
+        detail: all.length > 1 || !gpu.name || gpu.name.trim().toUpperCase() === 'GPU' ? undefined : gpu.name, points: seriesPoints(snapshot, gpu.key), source: gpu,
       }));
     case 'temperature': {
-      // The hottest part, and its history.
-      const hot = [cpu, ...metrics.filter(item => item.kind === 'gpu')].filter(item => item?.temperatureC !== undefined).sort((a, b) => (b!.temperatureC ?? 0) - (a!.temperatureC ?? 0))[0];
-      if (!hot) return [];
-      return [{ metric, key: `${hot.key}@temp`, label: t('devices.calme.tempShort'), value: hot.temperatureC, text: temperatureText(hot.temperatureC), detail: hot.kind === 'gpu' ? hot.name || 'GPU' : 'CPU', points: seriesPoints(snapshot, `${hot.key}@temp`) }];
+      if (cpu?.temperatureC === undefined || !Number.isFinite(cpu.temperatureC)) return [];
+      return [{ metric, key: `${cpu.key}@temp`, label: t('devices.calme.cpuTemperature'), value: cpu.temperatureC, text: temperatureText(cpu.temperatureC), points: seriesPoints(snapshot, `${cpu.key}@temp`), source: cpu }];
     }
+    case 'gpuTemperature':
+      return metrics.filter(item => item.kind === 'gpu' && item.temperatureC !== undefined && Number.isFinite(item.temperatureC)).map((gpu, _index, all) => ({
+        metric, key: `${gpu.key}@temp`, label: all.length > 1 ? [t('devices.calme.gpuTemperature'), gpu.name || 'GPU'].join(' · ') : t('devices.calme.gpuTemperature'),
+        value: gpu.temperatureC, text: temperatureText(gpu.temperatureC), detail: all.length > 1 || !gpu.name || gpu.name.trim().toUpperCase() === 'GPU' ? undefined : gpu.name, points: seriesPoints(snapshot, `${gpu.key}@temp`), source: gpu,
+      }));
     case 'load':
       return vitals.load?.length ? [{
         metric, key: 'load.1', label: t('devices.calme.load'), value: vitals.load[0], text: decimal(vitals.load[0], 2, language),
