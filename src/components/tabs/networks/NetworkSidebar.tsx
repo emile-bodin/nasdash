@@ -4,14 +4,7 @@ import { Search, ShieldAlert, CheckCircle, AlertTriangle, RefreshCw, HelpCircle,
 import { useConfig } from '@/hooks/useConfig';
 import { useI18n } from '@/i18n/I18nProvider';
 
-interface ActivePortItem {
-  port: number;
-  serviceName: string;
-  ip: string;
-  source: string;
-  type: string; // 'tcp' | 'udp' | 'http' etc.
-  status?: string; // e.g. 'running', 'active', 'offline'
-}
+import { addPortItemToList, type ActivePortItem } from './portAggregation';
 
 export function NetworkSidebar({ showSensitive = true }: { showSensitive?: boolean }) {
   const { t } = useI18n();
@@ -83,40 +76,7 @@ export function NetworkSidebar({ showSensitive = true }: { showSensitive?: boole
       });
     }
 
-    const addPortItem = (item: ActivePortItem) => {
-      // Find an existing item with the same port, serviceName, type, and source
-      const existingIndex = list.findIndex(
-        x => x.port === item.port && 
-             x.serviceName === item.serviceName && 
-             x.type === item.type && 
-             x.source === item.source &&
-             (x.ip === item.ip || x.ip === '0.0.0.0' || x.ip === '::' || item.ip === '0.0.0.0' || item.ip === '::')
-      );
-
-      if (existingIndex >= 0) {
-        const existing = list[existingIndex];
-        // Rules for preferring a cleaner/more specific IP:
-        // - We prefer a specific IP (not '::' and not '0.0.0.0') over '0.0.0.0' or '::'
-        // - We prefer '0.0.0.0' over '::'
-        const isExistingIpWildcardV6 = existing.ip === '::';
-        const isExistingIpWildcardV4 = existing.ip === '0.0.0.0';
-        const isNewIpWildcardV6 = item.ip === '::';
-        const isNewIpWildcardV4 = item.ip === '0.0.0.0';
-
-        let shouldOverwrite = false;
-        if (isExistingIpWildcardV6 && !isNewIpWildcardV6) {
-          shouldOverwrite = true;
-        } else if (isExistingIpWildcardV4 && !isNewIpWildcardV4 && !isNewIpWildcardV6) {
-          shouldOverwrite = true;
-        }
-
-        if (shouldOverwrite) {
-          list[existingIndex].ip = item.ip;
-        }
-      } else {
-        list.push(item);
-      }
-    };
+    const addPortItem = (item: ActivePortItem) => addPortItemToList(list, item);
 
     // Helper to parse IP and Port from URL
     const parseUrl = (urlString: string) => {
