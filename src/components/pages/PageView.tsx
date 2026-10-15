@@ -162,7 +162,7 @@ export function PageView(props: PageViewProps) {
   const hasDocker = page.widgets.some(widget => !widget.hidden && getWidgetCatalogEntry(widget.type)?.linkGroup === 'docker');
 
   return (
-    <DockerWorkspaceProvider enabled={isVisible && hasDocker} summaryOnPage={page.widgets.some(widget => !widget.hidden && widget.type === 'docker-summary')}>
+    <DockerWorkspaceProvider enabled={isVisible && hasDocker}>
       <DndContext sensors={sensors} collisionDetection={innerCollision} onDragStart={onDragStart} onDragEnd={onDragEnd} onDragCancel={() => setInnerDrag(null)}>
         <div className={`nd-page ${editMode ? 'nd-page--editing' : ''}`} data-page-id={page.id}>
           {page.id === 'dashboard' && !editMode && <GettingStarted />}
@@ -721,7 +721,7 @@ function WidgetFrame({ page, widget, editMode, edit, onMeasure, onResizeStart, c
   // A category itself is edited from its own button (in the group); this one
   // opens the options shared by every category (pings, address or latency).
   const configure = entry?.settingsTab
-    ? () => setSettingsModal({ open: true, targetTab: entry.settingsTab })
+    ? () => setSettingsModal({ open: true, targetTab: entry.settingsTab, targetPageId: page.id, targetWidgetId: widget.id })
     : undefined;
   return (
     <div
