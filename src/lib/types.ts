@@ -34,7 +34,7 @@ export interface DeviceApiMapping {
 }
 
 export interface DeviceApiConfig {
-  type: 'homeassistant' | 'proxmox' | 'custom' | 'glances' | 'lhm' | 'netdata' | 'beszel' | 'prometheus';
+  type: 'homeassistant' | 'proxmox' | 'custom' | 'glances' | 'lhm' | 'netdata' | 'beszel' | 'technitium' | 'prometheus';
   url: string;
   token?: string;
   ip?: string;
@@ -359,13 +359,9 @@ export interface DashboardConfig {
     categoryTitlePosition?: 'inside' | 'above';
     weatherLocation?: { lat: number; lon: number; name: string };
     weatherLocations?: { id: string; lat: number; lon: number; name: string }[];
-    /** Content widget sources, shared by every widget of the type (Settings → Widgets). */
-    rssFeeds?: { id: string; url: string; title?: string }[];
-    marketSymbols?: { id: string; symbol: string; label?: string; kind?: string; exchange?: string }[];
-    quotes?: { id: string; text: string; author?: string }[];
-    /** Online quote sources (ids from `quoteProviders.ts`). */
-    quoteProviders?: string[];
     weatherWidgetStyle?: 'default' | 'currentOnly' | 'minimal' | 'extended';
+    technitiumStatsRange?: 'hour' | 'day' | 'week' | 'month' | 'year' | 'all';
+    technitiumStatsNode?: string;
     activeWeatherLocationId?: string;
     hideDock?: boolean;
     calendarUrl?: string;
