@@ -6,6 +6,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+### Added
+
+- Add a versioned read-only external REST API with scoped, hashed and revocable keys, explicit DTOs, OpenAPI metadata, HTTPS/CORS enforcement, rate limits and security audit records.
+- Add an administrator-only Swagger console with interactive external API testing.
+- Include sanitized uptime, load averages, CPU core count and network throughput in external device metric responses.
+- Add an isolated Docker development deployment with port preflight checks, a dedicated data volume and first-start credentials supplied through `.env.dev`.
+
 ## [0.2.4] - 2026-10-13
 
 ### Upgrading from 0.2.3

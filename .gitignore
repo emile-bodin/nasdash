@@ -40,6 +40,7 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 !.env.example
+!.env.dev.example
 
 # Custom Data — only *.example.json and .gitkeep are committed;
 # all real data files (which may contain tokens, password hashes, topology, etc.) are local-only.

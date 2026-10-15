@@ -1,0 +1,21 @@
+name: nasdash-dev
+
+services:
+  nasdash:
+    container_name: nasdash-dev
+    ports: !override
+      - "127.0.0.1:${NASDASH_DEV_PORT:-2514}:2504"
+    env_file:
+      - path: .env.dev
+        required: false
+    environment:
+      NASDASH_EXTERNAL_API_ALLOW_INSECURE_HTTP: "true"
+    volumes:
+      - nasdash_dev_data:/app/data
+    pid: !reset null
+    extra_hosts: !reset []
+    restart: "no"
+
+volumes:
+  nasdash_dev_data:
+    name: nasdash_dev_data

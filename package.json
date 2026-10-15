@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "next dev -H 127.0.0.1 --port 2499",
     "dev:lan": "next dev -H 0.0.0.0 --port 2499",
+    "dev:docker": "node scripts/dev-docker.mjs",
     "demo": "node scripts/demo-dev.mjs",
     "demo:lan": "node scripts/demo-dev.mjs --lan",
     "fake:integrations": "node scripts/fake-integrations.mjs",
@@ -44,6 +45,7 @@
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "recharts": "^3.10.1",
+    "swagger-ui-dist": "^5.33.2",
     "swr": "^2.5.1",
     "systeminformation": "^5.33.15",
     "uuid": "13.0.2"
