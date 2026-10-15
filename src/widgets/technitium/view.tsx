@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Loader2 } from 'lucide-react';
+import { IntegrationLogo } from '@/components/integrations/IntegrationLogo';
 import { WidgetContainer } from '@/components/widgets/WidgetContainer';
 import { CalmeWidget } from '../calme';
 import type { WidgetViewProps } from '../types';
@@ -53,7 +55,6 @@ export default function TechnitiumView({ instance, editMode }: WidgetViewProps) 
     return () => { cancelled = true; window.clearInterval(timer); };
   }, [range, node]);
 
-  if (!snapshot && !editMode) return null;
   const counters = snapshot?.stats ?? snapshot?.counters ?? {};
   const state = snapshot ? (snapshot.online ? 'online' : 'offline') : 'waiting';
   const rangeLabels: Record<string, string> = {
@@ -75,16 +76,16 @@ export default function TechnitiumView({ instance, editMode }: WidgetViewProps) 
   return (
     <WidgetContainer>
       <CalmeWidget title={widgetName} editMode={editMode}>
-        <div className={`ndc-dev ${state === 'offline' ? 'is-offline' : ''}`}>
+        <div className={`ndc-dev ${state === 'offline' ? 'is-offline' : ''}`} aria-busy={state === 'waiting'}>
           <div className="ndc-dev-head">
-            <span className="ndc-dev-icon" aria-hidden="true">🧭</span>
+            <span className="ndc-dev-icon" aria-hidden="true"><IntegrationLogo id="technitium" size={34} /></span>
             <span className="ndc-dev-id">
-              <span className="ndc-dev-name">{widgetName}</span>
-              <span className="ndc-dev-sub">{t('widget.technitium.statsRange')}: {rangeLabel}</span>
+              <span className="ndc-dev-name">{scopeName}</span>
+              <span className="ndc-dev-sub">{rangeLabel} · {t('widget.technitium.name')}</span>
             </span>
             {statusNode}
           </div>
-          {snapshot?.error ? <div className="ndc-dev-error" role="status">{snapshot.error}</div> : (
+          {snapshot?.error ? <div className="ndc-dev-error" role="status">{snapshot.error}</div> : snapshot ? (
             <dl className="ndc-metric-list ndc-metric-list--value ndc-technitium-stats">
               {rows.map(([key, label]) => (
                 <div key={key} className="ndc-m ndc-m--value">
@@ -97,7 +98,7 @@ export default function TechnitiumView({ instance, editMode }: WidgetViewProps) 
                 </div>
               ))}
             </dl>
-          )}
+          ) : <div className="ndc-empty" role="status"><Loader2 size={16} className="nd-spin" /> {status}</div>}
         </div>
       </CalmeWidget>
     </WidgetContainer>
