@@ -3,6 +3,7 @@
 NasDash uses complementary static, unit, browser, and container validation layers:
 
 - `npm test` runs the fast unit and API contract suite with Vitest.
+- `npm run test:external-api-contract` separately gates documented external routes, DTO/OpenAPI compatibility, read-only authentication, and the example client's credential and error handling.
 - `npm run check:i18n` validates EN/FR/ES/DE/IT key parity, placeholders, untranslated TSX copy and the installation-language guard.
 - `npm run check:installation-language` checks operational console/diagnostic copy, Docker startup messages and only the public `data/*.example.json` defaults for French leftovers. It never scans persisted user data. This targeted detector complements the runtime installation tests; it is not a general language recognizer.
 - `npm run test:e2e` starts an isolated NasDash instance and runs the critical browser paths with Playwright Chromium.

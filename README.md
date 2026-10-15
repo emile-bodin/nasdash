@@ -176,6 +176,22 @@ The external API requires HTTPS. Browser origins are denied by default; set `NAS
 
 Administrators can open `/swagger`, or use the link in **Settings → Users and access**, for an interactive Swagger console. Enter an `ndk_…` key with **Authorize**, then use **Try it out**. Test requests deliberately omit dashboard cookies.
 
+### Example API client
+
+The dependency-free Node.js example uses the same public contract as Swagger. It reads the key from the environment, sends it only in the `Authorization` header, rejects cleartext remote URLs, applies a ten-second timeout and reports stable request IDs and rate-limit retry times:
+
+```bash
+export NASDASH_URL=https://nasdash.example.com
+export NASDASH_API_KEY=ndk_replace_with_your_scoped_key
+
+node examples/external-api-client.mjs health
+node examples/external-api-client.mjs services
+node examples/external-api-client.mjs devices
+node examples/external-api-client.mjs metrics <device-id>
+```
+
+Use a key containing only the scopes needed by the selected commands. Plain HTTP is accepted only for `localhost`, `127.0.0.1`, or `::1` development URLs. The client never reads dashboard cookies and never includes an API key in a URL.
+
 ## Configuration and persistence
 
 - The default `./data` folder contains configuration, users, password hashes, encryption material, and uploaded logos.
@@ -239,6 +255,7 @@ New interface copy should use a semantic key in `src/i18n/messages.ts`. `src/i18
 | `npm run lint` | Run ESLint. |
 | `npm run check:i18n` | Verify translation completeness, placeholders, and hard-coded interface copy. |
 | `npm test` | Run the Vitest suite. |
+| `npm run test:external-api-contract` | Verify the OpenAPI/DTO contract and dependency-free example client. |
 | `npm run build` | Create the production build. |
 | `npm run test:e2e` | Exercise isolated critical browser paths. |
 | `npm run test:container` | Run the production-container smoke test. |

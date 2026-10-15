@@ -12,6 +12,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - Add an administrator-only Swagger console with interactive external API testing.
 - Include sanitized uptime, load averages, CPU core count and network throughput in external device metric responses.
 - Add an isolated Docker development deployment with port preflight checks, a dedicated data volume and first-start credentials supplied through `.env.dev`.
+- Add an explicit CI contract gate and a dependency-free Node.js external API client with HTTPS, timeout, rate-limit and secret-handling safeguards.
 
 ## [0.2.4] - 2026-10-13
 

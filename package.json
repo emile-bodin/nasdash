@@ -30,6 +30,7 @@
     "data:backup": "node scripts/data-snapshot.mjs backup",
     "data:restore": "node scripts/data-snapshot.mjs restore",
     "test": "vitest run",
+    "test:external-api-contract": "node --test scripts/external-api-client.check.mjs && vitest run src/lib/externalApiContract.test.ts src/lib/externalOpenApi.test.ts",
     "test:e2e": "node scripts/e2e-runner.mjs",
     "test:container": "node scripts/container-checks.mjs"
   },
