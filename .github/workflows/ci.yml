@@ -37,6 +37,9 @@ jobs:
           npx tsc --noEmit
           npm test
 
+      - name: Verify external API contract and example client
+        run: npm run test:external-api-contract
+
       - name: Validate interface translations
         run: npm run check:i18n
 
