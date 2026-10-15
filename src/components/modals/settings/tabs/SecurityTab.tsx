@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useConfig } from '@/hooks/useConfig';
-import { User, Plus, Trash2, Eye, EyeOff, Pencil, X } from 'lucide-react';
+import { User, Plus, Trash2, Eye, EyeOff, Pencil, X, KeyRound, Copy, ExternalLink } from 'lucide-react';
 import { WIDGET_CATALOG } from '@/lib/widgets/catalog';
 import { permissionSelection, savedPermissions } from '@/lib/permissions';
 
@@ -26,6 +26,19 @@ interface LocalUser {
 interface CustomTabOption {
   id: string;
   name: string;
+}
+
+const API_SCOPES = ['read:health', 'read:services', 'read:devices', 'read:metrics'] as const;
+
+interface ExternalApiKey {
+  id: string;
+  name: string;
+  prefix: string;
+  scopes: string[];
+  createdAt: string;
+  expiresAt?: string;
+  revokedAt?: string;
+  lastUsedAt?: string;
 }
 
 function getErrorMessage(error: unknown, fallback: string): string {
@@ -60,6 +73,12 @@ export function SecurityTab() {
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
   const [addingUser, setAddingUser] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
+  const [apiKeys, setApiKeys] = useState<ExternalApiKey[]>([]);
+  const [apiKeyName, setApiKeyName] = useState('');
+  const [apiKeyScopes, setApiKeyScopes] = useState<string[]>([...API_SCOPES]);
+  const [apiKeyExpiryDays, setApiKeyExpiryDays] = useState('90');
+  const [generatedApiToken, setGeneratedApiToken] = useState<string | null>(null);
+  const [creatingApiKey, setCreatingApiKey] = useState(false);
 
   // Modal de confirmation de suppression
   const [deleteConfirmUser, setDeleteConfirmUser] = useState<string | null>(null);
@@ -81,9 +100,55 @@ export function SecurityTab() {
     }
   };
 
+  const fetchApiKeys = async () => {
+    try {
+      const response = await fetch('/api/auth/api-keys', { cache: 'no-store' });
+      if (response.ok) setApiKeys(await response.json());
+    } catch (error) {
+      console.error('API key loading failed:', error);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
+    fetchApiKeys();
   }, []);
+
+  const createApiKey = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!apiKeyName.trim() || apiKeyScopes.length === 0) return;
+    setCreatingApiKey(true);
+    setActionError(null);
+    setActionSuccess(null);
+    try {
+      const expiresAt = apiKeyExpiryDays === 'never'
+        ? undefined
+        : new Date(Date.now() + Number(apiKeyExpiryDays) * 86_400_000).toISOString();
+      const response = await fetch('/api/auth/api-keys', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: apiKeyName.trim(), scopes: apiKeyScopes, expiresAt }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || t('externalApi.createFailed'));
+      setGeneratedApiToken(result.token);
+      setApiKeyName('');
+      setActionSuccess(t('externalApi.created'));
+      await fetchApiKeys();
+    } catch (error) {
+      setActionError(getErrorMessage(error, t('externalApi.createFailed')));
+    } finally {
+      setCreatingApiKey(false);
+    }
+  };
+
+  const revokeApiKey = async (id: string) => {
+    setActionError(null);
+    const response = await fetch(`/api/auth/api-keys?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+    const result = await response.json();
+    if (!response.ok) setActionError(result.error || t('externalApi.revokeFailed'));
+    else await fetchApiKeys();
+  };
 
   const securityMode = config?.settings?.securityMode || 'public';
   const demoMode = config?.demoMode === true;
@@ -348,6 +413,57 @@ export function SecurityTab() {
             <button type="submit" className="nd-btn nd-btn-accent" disabled={addingUser}>{addingUser ? '…' : t("Sauvegarder")}</button>
           </div>
         </form>
+      )}
+
+      {!demoMode && (
+        <section className="ndc-set-block">
+          <CalmeHeading info={t('externalApi.description')}>{t('externalApi.title')}</CalmeHeading>
+          <a className="nd-btn" href="/swagger" target="_blank" rel="noreferrer" style={{ alignSelf: 'flex-start' }}>
+            <ExternalLink size={14} /> {t('externalApi.swagger')}
+          </a>
+          {generatedApiToken && (
+            <div className="ndc-set-note is-ok">
+              <strong>{t('externalApi.copyNow')}</strong>
+              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                <input className="nd-input" style={{ flex: 1 }} readOnly value={generatedApiToken} aria-label={t('externalApi.generatedKey')} />
+                <button type="button" className="ndc-icon-button" aria-label={t('externalApi.copy')} onClick={() => navigator.clipboard.writeText(generatedApiToken)}><Copy size={14} /></button>
+                <button type="button" className="nd-btn" onClick={() => setGeneratedApiToken(null)}>{t('externalApi.done')}</button>
+              </div>
+            </div>
+          )}
+          {apiKeys.map(key => (
+            <div key={key.id} className="ndc-lib-row ndc-lib-row--actions">
+              <span className="ndc-lib-icon"><KeyRound size={15} /></span>
+              <span className="ndc-lib-name" style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
+                <span>{key.name} <span className="ndc-tag">{key.prefix}…</span></span>
+                <span className="ndc-set-list-sub">{key.scopes.join(', ')} · {key.revokedAt ? t('externalApi.revoked') : key.expiresAt ? t('externalApi.expires', { date: new Date(key.expiresAt).toLocaleDateString() }) : t('externalApi.neverExpires')}</span>
+              </span>
+              <button type="button" className="ndc-icon-button" disabled={Boolean(key.revokedAt)} onClick={() => revokeApiKey(key.id)} title={t('externalApi.revoke')} aria-label={t('externalApi.revoke')}><Trash2 size={13} /></button>
+            </div>
+          ))}
+          <form onSubmit={createApiKey} style={{ marginTop: 12 }}>
+            <CalmeRow label={t('externalApi.name')}>
+              <input className="nd-input" style={{ width: 240 }} value={apiKeyName} maxLength={100} onChange={event => setApiKeyName(event.target.value)} placeholder={t('externalApi.namePlaceholder')} />
+            </CalmeRow>
+            <CalmeRow label={t('externalApi.expiry')}>
+              <select className="nd-input" style={{ width: 240 }} value={apiKeyExpiryDays} onChange={event => setApiKeyExpiryDays(event.target.value)}>
+                <option value="30">{t('externalApi.days', { count: 30 })}</option>
+                <option value="90">{t('externalApi.days', { count: 90 })}</option>
+                <option value="365">{t('externalApi.days', { count: 365 })}</option>
+                <option value="never">{t('externalApi.neverExpires')}</option>
+              </select>
+            </CalmeRow>
+            <CalmeHeading>{t('externalApi.scopes')}</CalmeHeading>
+            <div className="ndc-chips">
+              {API_SCOPES.map(scope => (
+                <button key={scope} type="button" className="ndc-chip" aria-pressed={apiKeyScopes.includes(scope)} onClick={() => setApiKeyScopes(current => current.includes(scope) ? current.filter(item => item !== scope) : [...current, scope])}>{scope}</button>
+              ))}
+            </div>
+            <div className="ndc-form-actions">
+              <button type="submit" className="nd-btn nd-btn-accent" disabled={creatingApiKey || !apiKeyName.trim() || apiKeyScopes.length === 0}>{creatingApiKey ? '…' : t('externalApi.create')}</button>
+            </div>
+          </form>
+        </section>
       )}
       {deleteDialog}
     </div>

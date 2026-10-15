@@ -156,6 +156,26 @@ npm run dev
 
 Development binds to `127.0.0.1:2499` by default. Use `npm run dev:lan` only when deliberately testing on a trusted network.
 
+For an isolated Docker development deployment, copy `.env.dev.example` to `.env.dev`, replace its synthetic credentials, then run `npm run dev:docker`. The launcher verifies Docker, checks the localhost port before starting, builds the current checkout, uses only the `nasdash_dev_data` volume, and waits for `/api/health`. It runs this Compose stack:
+
+```bash
+docker compose \
+  -f docker-compose.yml \
+  -f docker-compose.build.yml \
+  -f docker-compose.dev.yml \
+  up -d --build
+```
+
+The development override never mounts the normal `./data` folder. `NASDASH_ADMIN_PASSWORD` and `NASDASH_VIEWER_PASSWORD` apply only when the isolated account file is first created; use the documented reset helper for an existing volume.
+
+## External read-only API
+
+Administrators can create scoped, expirable API keys in **Settings → Users and access**. A key is shown once and is stored only as a hash. Send it as `Authorization: Bearer ndk_…` to the versioned endpoints under `/api/v1/external`: health, service names, devices, cached device metrics and vitals (uptime, load and network throughput), key identity and the OpenAPI document. Dashboard cookies never authenticate this interface, and the external serializers omit addresses, credentials, integration configuration and secret categories.
+
+The external API requires HTTPS. Browser origins are denied by default; set `NASDASH_EXTERNAL_API_ALLOWED_ORIGINS` to an exact comma-separated allowlist only when a browser application needs access. Behind a trusted reverse proxy, enable `NASDASH_TRUST_PROXY=true` only when that proxy overwrites forwarding headers. The isolated Docker development stack alone enables insecure HTTP on localhost.
+
+Administrators can open `/swagger`, or use the link in **Settings → Users and access**, for an interactive Swagger console. Enter an `ndk_…` key with **Authorize**, then use **Try it out**. Test requests deliberately omit dashboard cookies.
+
 ## Configuration and persistence
 
 - The default `./data` folder contains configuration, users, password hashes, encryption material, and uploaded logos.
@@ -181,6 +201,7 @@ Share installation experiences and constructive feedback through [GitHub Issues]
 - Restrict remote Docker proxies to a private LAN or overlay address and firewall them to the NasDash host.
 - Use a dedicated least-privilege Proxmox API token; a read-only role such as `PVEAuditor` is preferable.
 - Never commit `.env` or a real runtime `data/` directory.
+- Treat external API keys as passwords: use the smallest scopes, set an expiry, rotate them, and review `external-api-audit.jsonl` for access records.
 - Public demo controls and infrastructure data are fictional and isolated.
 
 Read [access rules](https://docs.nasdash.lucas-homelab.fr/en/docs/guide/authentication-roles), [SECURITY.md](SECURITY.md), and the [integration troubleshooting guide](https://docs.nasdash.lucas-homelab.fr/en/docs/operations/troubleshooting) before exposing integrations.

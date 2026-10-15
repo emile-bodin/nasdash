@@ -3337,3 +3337,12 @@ div[id^="group-box-"]:hover .nd-anchor-plus {
 .lh-demo-theme:hover { border-color: rgba(255, 255, 255, 0.3); }
 .lh-demo-theme[aria-checked="true"] { border-color: rgba(95, 211, 230, 0.7); background: rgba(95, 211, 230, 0.1); }
 .lh-demo-theme-swatch { width: 22px; height: 22px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.2); flex-shrink: 0; }
+
+/* Swagger is admin-only but uses its own light documentation canvas. */
+.nd-swagger-page { min-height: 100vh; background: #f4f6f8; color: #17202a; padding: 24px; }
+.nd-swagger-header { max-width: 1460px; margin: 0 auto 18px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.nd-swagger-header h1 { margin: 0; font-size: 2rem; }
+.nd-swagger-header p { margin: 6px 0 0; }
+.nd-swagger-eyebrow { color: #4b65d1; font-size: .75rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.nd-swagger-page .swagger-ui { max-width: 1460px; margin: 0 auto; }
+@media (max-width: 700px) { .nd-swagger-page { padding: 14px; } .nd-swagger-header { align-items: flex-start; flex-direction: column; } }
