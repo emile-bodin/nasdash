@@ -912,11 +912,18 @@ body[data-design="calme"] .nd-service-name {
 /* Technitium: wide cards use aligned label/value rows; compact cards keep
    the value beside its label so the five counters remain easy to scan. */
 .ndc-technitium-stats { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 14px 18px; }
-.ndc-technitium-stats .ndc-m-head { flex-direction: column; align-items: stretch; gap: 4px; }
-.ndc-technitium-stats .ndc-m-head .ndc-m-value { margin-left: 0; text-align: right; }
+.ndc-technitium-stats .ndc-m-head { flex-direction: column; align-items: center; gap: 4px; }
+.ndc-technitium-stats .ndc-m-head .ndc-m-value { margin-left: 0; text-align: center; }
+@container widget (min-width: 700px) {
+  .ndc-technitium-stats { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+@container widget (min-width: 521px) and (max-width: 699px) {
+  .ndc-technitium-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 @container widget (max-width: 520px) {
-  .ndc-technitium-stats .ndc-m-head { flex-direction: row; align-items: baseline; gap: 4px 8px; }
-  .ndc-technitium-stats .ndc-m-head .ndc-m-value { margin-left: auto; }
+  .ndc-technitium-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ndc-technitium-stats .ndc-m-head { flex-direction: row; align-items: baseline; gap: 4px 8px; width: 100%; }
+  .ndc-technitium-stats .ndc-m-head .ndc-m-value { margin-left: auto; text-align: right; }
 }
 
 /* ---------- Calme shell for the other widgets ----------
