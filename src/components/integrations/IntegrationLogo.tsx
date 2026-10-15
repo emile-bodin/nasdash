@@ -13,6 +13,7 @@ const LOGOS: Record<string, string> = {
   glances: `${ICONS}/svg/glances.svg`,
   netdata: `${ICONS}/svg/netdata.svg`,
   beszel: `${ICONS}/svg/beszel.svg`,
+  technitium: `${ICONS}/png/technitium.png`,
   prometheus: `${ICONS}/svg/prometheus.svg`,
   proxmox: `${ICONS}/svg/proxmox.svg`,
   docker: `${ICONS}/svg/docker.svg`,
@@ -23,10 +24,6 @@ const LOGOS: Record<string, string> = {
   dockhand: `${ICONS}/png/dockhand.png`,
   tailscale: `${ICONS}/svg/tailscale.svg`,
   headscale: `${ICONS}/svg/headscale.svg`,
-  pihole: `${ICONS}/svg/pi-hole.svg`,
-  adguard: `${ICONS}/svg/adguard-home.svg`,
-  immich: `${ICONS}/svg/immich.svg`,
-  photoprism: `${ICONS}/svg/photoprism.svg`,
 };
 
 export function IntegrationLogo({ id, size = 28 }: { id: string; size?: number }) {
