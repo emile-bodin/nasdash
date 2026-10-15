@@ -9,7 +9,7 @@ export interface CategoryModalState { open: boolean; category?: Category; placem
 export interface DeviceModalState { open: boolean; device?: Device }
 export interface DockerActionModalState { open: boolean; action?: DockerActionConfig }
 /** `targetSection`: a section of the tab to scroll to (e.g. `monitoring` on the Integrations page). */
-export interface SettingsModalState { open: boolean; targetTab?: string; targetSection?: string }
+export interface SettingsModalState { open: boolean; targetTab?: string; targetSection?: string; targetPageId?: string; targetWidgetId?: string }
 export interface CalendarEventModalState { open: boolean; date?: string; events?: CalendarDisplayEvent[]; event?: LocalCalendarEvent }
 export interface ViewEventModalState { open: boolean; event?: CalendarDisplayEvent }
 
